@@ -55,6 +55,8 @@ ui <- fluidPage(
   ),
 
   hr(),
+  leafletOutput("map"),
+  hr(),
   tableOutput("nearestPharmsTable")
 
 )
@@ -69,7 +71,12 @@ server <- function(input, output) {
                                                                     pharm_df = pharmlist, 
                                                                     num_pharms = input$numPharms,
                                                                     onlySmokingPharms = input$serviceType) })
+  
   output$pharmListDate <- renderText({ get_latest_pharm_list_date() })
+  
+  output$map <- renderLeaflet({
+    create_leaflet(search_postcode = input$postcode, onlySmokingPharms = input$serviceType)
+  })
 
 }
 
