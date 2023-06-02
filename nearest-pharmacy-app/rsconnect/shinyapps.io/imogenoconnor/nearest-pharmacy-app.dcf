@@ -5,9 +5,9 @@ account: imogenoconnor
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 9146127
-bundleId: 7239197
+bundleId: 7296053
 url: https://imogenoconnor.shinyapps.io/nearest-pharmacy-app/
-when: 1684514488.34285
-lastSyncTime: 1684514488.34286
+when: 1685700490.90691
+lastSyncTime: 1685700490.90692
 asMultiple: FALSE
 asStatic: FALSE

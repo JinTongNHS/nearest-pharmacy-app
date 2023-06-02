@@ -7,7 +7,21 @@
 #    http://shiny.rstudio.com/
 #
 
-library(shiny)
+#library(shiny)
+library(tidyverse)
+#https://docs.ropensci.org/PostcodesioR/
+#install.packages("PostcodesioR")
+library(PostcodesioR)
+library(DBI)
+library(odbc)
+library(readxl)
+#install.packages("shinythemes")
+library(sf) 
+#library(tmap)
+library(leaflet)
+library(tidygeocoder)
+library(shinythemes)
+
 
 # # Define UI for application that draws a histogram
 # ui <- fluidPage(
@@ -64,6 +78,8 @@ ui <- fluidPage(
 # Define server logic required to draw a histogram
 server <- function(input, output) {
   
+
+  
   source("functions.R")
   
 
@@ -75,7 +91,9 @@ server <- function(input, output) {
   output$pharmListDate <- renderText({ get_latest_pharm_list_date() })
   
   output$map <- renderLeaflet({
-    create_leaflet(search_postcode = input$postcode, onlySmokingPharms = input$serviceType)
+    create_leaflet(search_postcode = input$postcode, 
+                   num_pharms = input$numPharms,
+                   onlySmokingPharms = input$serviceType)
   })
 
 }
