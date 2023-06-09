@@ -1,54 +1,12 @@
+#read in data
+pharmlist <- readRDS("pharmlist.rds")
+smoking_registrations <- readRDS("smoking_registrations.rds")
+blood_pressure_check_registrations <- readRDS("blood_pressure_check_registrations.rds")
+contraception_registrations <- readRDS("contraception_registrations.rds")
+cpcs_registrations <- readRDS("cpcs_registrations.rds")
+nms_registrations <- readRDS("nms_registrations.rds")
 
 
-
-################################################################################
-pull_pharm_list <- function(){
-  
-  con <- dbConnect(odbc::odbc(), "NCDR")
-  sql = "SELECT *
-  FROM [NHSE_Sandbox_DispensingReporting].[dbo].[Ref_PharmaceuticalList]"
-  result <- dbSendQuery(con,sql)
-  pharm_list <- dbFetch(result)
-  dbClearResult(result)
-  
-  names(pharm_list) <- names(pharm_list) %>% make.names()
-  
-  #fix miscoded snapshot month
-  pharm_list <- pharm_list %>%
-    mutate(SnapshotMonth = as.Date(SnapshotMonth)) %>%
-    mutate(SnapshotMonth = if_else(SnapshotMonth == as.Date("2022-10-01"), 
-                                   as.Date("2022-09-01"), 
-                                   SnapshotMonth)) %>%
-    rename(ODS.CODE = Pharmacy.ODS.Code..F.Code., 
-           postcode = Post.Code, 
-           ICB.Name = STP.Name, 
-           EPS.Indicator = EPS.Enabled)
-}
-
-################################################################################
-#update pharm list with postcode coords
-update_pharm_list <- function(){
-  
-  #get recent pharm list
-  full_pharmlist <- pull_pharm_list()
-  
-  pharmlist <- full_pharmlist %>%
-    filter(SnapshotMonth == max(SnapshotMonth))
-  
-  #make sure all ODS codes and postcodes are clean
-  pharmlist <- pharmlist %>%
-    mutate(postcode = str_replace_all(postcode, " ", "")) %>%
-    mutate(postcode = toupper(postcode)) %>% 
-    mutate(ODS.CODE = str_replace_all(ODS.CODE, " ", "")) %>%
-    mutate(ODS.CODE = toupper(ODS.CODE)) 
-  
-  #look up eastings and northings for each postcode
-  pharmlist <- pharmlist %>%
-    rowwise() %>%
-    mutate(x_pharm = postcode_lookup(postcode)$eastings,
-           y_pharm = postcode_lookup(postcode)$northings)
-  
-}
 
 ################################################################################
 #function to find nearest straight line pharmacy to GP
@@ -56,21 +14,38 @@ get_nearest_pharmacies <- function(search_postcode,
                                    pharm_df = pharmlist,
                                    num_pharms = 5,
                                    smokingPharms = smoking_registrations,
-                                   onlySmokingPharms,
+                                   serviceType,
                                    forMap = FALSE){
   
   x_postcode <- postcode_lookup(search_postcode)$eastings
   y_postcode <- postcode_lookup(search_postcode)$northings
   
-  #filter if only looking for smoking 
-  pharm_df <- pharm_df %>%
-    mutate(`Signed up to SCS` = if_else(ODS.CODE %in% smokingPharms$ODS.CODE, TRUE, FALSE))
-  
-  if(onlySmokingPharms == TRUE){
+
+  if(serviceType == "smoking"){
 
     pharm_df <- pharm_df %>%
       filter(`Signed up to SCS` == TRUE)
 
+  }else if(serviceType == "cpcs"){
+    
+    pharm_df <- pharm_df %>%
+      filter(`Signed up to CPCS` == TRUE)
+    
+  }else if(serviceType == "contraception"){
+    
+    pharm_df <- pharm_df %>%
+      filter(`Signed up to contraception services` == TRUE)
+    
+  }else if(serviceType == "bp"){
+    
+    pharm_df <- pharm_df %>%
+      filter(`Signed up to BP checks` == TRUE)
+    
+  }else if(serviceType == "nms"){
+    
+    pharm_df <- pharm_df %>%
+      filter(`Signed up to NMS` == TRUE)
+    
   }
 
   #creates a separate dataframe of distances to all pharmacies
@@ -88,6 +63,10 @@ get_nearest_pharmacies <- function(search_postcode,
              `Distance to pharmacy (miles)` = distance_miles,
              `Pharmacy ODS Code` = ODS.CODE,
              `Signed up to SCS`,
+             `Signed up to CPCS`,
+             `Signed up to contraception services`,
+             `Signed up to BP checks`,
+             `Signed up to NMS`,
              `Pharmacy Name` = Pharmacy.Trading.Name,
              `Pharmacy Organisation Name` = Organisation.Name,
              `Pharmacy Address 1` = Address.Field.1,
@@ -195,40 +174,45 @@ create_leaflet <- function(search_postcode,
                            pharm_df = pharmlist,
                            num_pharms = 5,
                            smokingPharms = smoking_registrations,
-                           onlySmokingPharms){
+                           serviceType){
   
   df <- get_nearest_pharmacies(search_postcode = search_postcode, 
                                  pharm_df = pharm_df,
                                  num_pharms = num_pharms,
                                  smokingPharms = smokingPharms,
-                                 onlySmokingPharms = onlySmokingPharms,
+                                 serviceType = serviceType,
                                  forMap = TRUE)
   
   df <- df %>%
     mutate(`Signed up to SCS` = if_else(`Pharmacy ODS Code` %in% smokingPharms$ODS.CODE, "Smoking", "Non-smoking")) %>%
-    mutate(colour = if_else(`Signed up to SCS` == "Smoking", "Green", "Blue")) %>%
+    #mutate(colour = if_else(`Signed up to SCS` == "Smoking", "Green", "Blue")) %>%
     filter(!is.na(x_pharm) & !is.na(y_pharm)) %>%
-    mutate(label = `Signed up to SCS`) %>%
+    #mutate(label = `Signed up to SCS`) %>%
+    mutate(label = "pharm") %>%
     ungroup() %>%
     add_row(`Pharmacy postcode` = search_postcode, label = "Input") %>%
     mutate(postcode = str_replace_all(`Pharmacy postcode`, " ", ""))
 
   ## This is the magic bit that uses the tidygeocoder package to find longatudes and latitudes
   df <- df %>%
-    mutate( geo(address = postcode, method = 'osm'))
+    rowwise() %>%
+    #mutate( geo(address = postcode, method = 'osm')) %>%
+    mutate(address = postcode,
+           lat = postcode_lookup(postcode)$latitude,
+           long = postcode_lookup(postcode)$longitude) %>%
+    ungroup()
 
-  ## Filters cohort into three lists, one for each iconset
-  cohort_filter1 <- df %>%
-    filter(label == "Smoking")
-  cohort_filter2 <- df %>%
-    filter(label == "Non-smoking")
+  # ## Filters cohort into three lists, one for each iconset
+  # cohort_filter1 <- df %>%
+  #   filter(label == "Smoking")
+  # cohort_filter2 <- df %>%
+  #   filter(label == "Non-smoking")
   input_postcode <- df %>%
     filter(df$label == "Input")
 
   ##  Create awesome icon sets for colours
   iconSet <- awesomeIconList(
-    "Smoking" = makeAwesomeIcon( icon = 'medkit', lib = 'fa', iconColor = "black", markerColor = "green"   , spin = FALSE ) ,
-    "Non-smoking" = makeAwesomeIcon( icon = 'medkit', lib = 'fa', iconColor = "black", markerColor = "orange", spin = FALSE ) ,
+    "pharm" = makeAwesomeIcon( icon = 'medkit', lib = 'fa', iconColor = "black", markerColor = "green"   , spin = FALSE ) ,
     "Input" = makeAwesomeIcon( icon = 'male', lib = 'fa', iconColor = "black", markerColor = "red" , spin = FALSE )
     )
 
@@ -236,16 +220,10 @@ create_leaflet <- function(search_postcode,
   map <- leaflet(df) %>%
     addTiles() %>%
     addProviderTiles(providers$OpenStreetMap) %>%
-    addAwesomeMarkers( lng = cohort_filter1$long,
-                       lat = cohort_filter1$lat,
-                       group = "Smoking",
-                       icon = iconSet[cohort_filter1$label],
-                       label = paste0(df$`Pharmacy ODS Code`, "\n",df$`Pharmacy Name`)
-                       ) %>%
-    addAwesomeMarkers( lng = cohort_filter2$long,
-                       lat = cohort_filter2$lat,
-                       group = "Non-smoking",
-                       icon = iconSet[cohort_filter2$label],
+    addAwesomeMarkers( lng = df$long,
+                       lat = df$lat,
+                       group = "pharm",
+                       icon = iconSet[df$label],
                        label = paste0(df$`Pharmacy ODS Code`, "\n",df$`Pharmacy Name`)
                        ) %>%
     addAwesomeMarkers( lng = input_postcode$long,
@@ -254,14 +232,6 @@ create_leaflet <- function(search_postcode,
                        icon = iconSet["Input"],
                        label = "You are here"
     ) %>%
-    # addAwesomeMarkers( lng = cohort_filter3$long,
-    #                    lat = cohort_filter3$lat,
-    #                    group = "Team C",
-    #                    icon = iconSet[cohort_filter3$label],
-    #                    label = paste(sep = " - ",
-    #                                  cohort_filter3$label ) ) %>%
-    addLayersControl(overlayGroups = c("Smoking", "Non-smoking"),    ##this bit adds the controls
-                     options = layersControlOptions(collapsed = FALSE) ) %>%
     flyToBounds(lng1 = min(df$long),
                 lat1 = min(df$lat),
                 lng2 = max(df$long),

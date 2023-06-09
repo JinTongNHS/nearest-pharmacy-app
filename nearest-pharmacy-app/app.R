@@ -16,7 +16,7 @@ library(DBI)
 library(odbc)
 library(readxl)
 #install.packages("shinythemes")
-library(sf) 
+library(sf)
 #library(tmap)
 library(leaflet)
 library(tidygeocoder)
@@ -57,8 +57,13 @@ ui <- fluidPage(
     ),
     column(3,
            radioButtons("serviceType", label = h5("Search across"),
-                        choices = list("All pharmacies" = FALSE, "Only pharmacies delivering smoking cessation services" = TRUE), 
-                        selected = TRUE)
+                        choices = list("All pharmacies" = "All", 
+                                       "Only pharmacies delivering smoking cessation services" = "smoking",
+                                       "Only pharmacies delivering CPCS services" = "cpcs",
+                                       "Only pharmacies delivering contraception services" = "contraception",
+                                       "Only pharmacies delivering blood pressure checks" = "bp",
+                                       "Only pharmacies delivering NMS services" = "nms"), 
+                        selected = "All")
     ),
     column(3,
            h5("This application is currently using the"),
@@ -81,25 +86,19 @@ server <- function(input, output) {
 
   
   source("functions.R")
-  #read in data
-  pharmlist <- readRDS("pharmlist.rds")
-  smoking_registrations <- readRDS("smoking_registrations.rds")
-  blood_pressure_check_registrations <- readRDS("blood_pressure_check_registrations.rds")
-  contraception_registrations <- readRDS("contraception_registrations.rds")
-  cpcs_registrations <- readRDS("cpcs_registrations.rds")
-  nms_registrations <- readRDS("nms_registrations.rds")
+  
 
   output$nearestPharmsTable <- renderTable({ get_nearest_pharmacies(search_postcode = input$postcode, 
                                                                     pharm_df = pharmlist, 
                                                                     num_pharms = input$numPharms,
-                                                                    onlySmokingPharms = input$serviceType) })
+                                                                    serviceType = input$serviceType) })
   
   output$pharmListDate <- renderText({ get_latest_pharm_list_date() })
   
   output$map <- renderLeaflet({
     create_leaflet(search_postcode = input$postcode, 
                    num_pharms = input$numPharms,
-                   onlySmokingPharms = input$serviceType)
+                   serviceType = input$serviceType)
   })
 
 }
