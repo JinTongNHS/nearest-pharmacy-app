@@ -81,7 +81,13 @@ server <- function(input, output) {
 
   
   source("functions.R")
-  
+  #read in data
+  pharmlist <- readRDS("pharmlist.rds")
+  smoking_registrations <- readRDS("smoking_registrations.rds")
+  blood_pressure_check_registrations <- readRDS("blood_pressure_check_registrations.rds")
+  contraception_registrations <- readRDS("contraception_registrations.rds")
+  cpcs_registrations <- readRDS("cpcs_registrations.rds")
+  nms_registrations <- readRDS("nms_registrations.rds")
 
   output$nearestPharmsTable <- renderTable({ get_nearest_pharmacies(search_postcode = input$postcode, 
                                                                     pharm_df = pharmlist, 

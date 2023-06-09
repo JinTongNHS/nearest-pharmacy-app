@@ -1,9 +1,5 @@
 
-#read in data
-pharmlist <- readRDS("pharmlist.rds")
-Smoking_Cessation_Service_Data <- read_excel("Smoking Cessation Service Data Feb23.xlsx", sheet = "Pharmacy Data", skip = 2)
-Smoking_Cessation_Service_Data <- Smoking_Cessation_Service_Data %>%
-  select(ODS.CODE = `Pharmacy Code`)
+
 
 ################################################################################
 pull_pharm_list <- function(){
@@ -59,7 +55,7 @@ update_pharm_list <- function(){
 get_nearest_pharmacies <- function(search_postcode, 
                                    pharm_df = pharmlist,
                                    num_pharms = 5,
-                                   smokingPharms = Smoking_Cessation_Service_Data,
+                                   smokingPharms = smoking_registrations,
                                    onlySmokingPharms,
                                    forMap = FALSE){
   
@@ -198,7 +194,7 @@ get_latest_pharm_list_date <- function(pharm_list = pharmlist){
 create_leaflet <- function(search_postcode, 
                            pharm_df = pharmlist,
                            num_pharms = 5,
-                           smokingPharms = Smoking_Cessation_Service_Data,
+                           smokingPharms = smoking_registrations,
                            onlySmokingPharms){
   
   df <- get_nearest_pharmacies(search_postcode = search_postcode, 
