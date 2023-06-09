@@ -113,62 +113,6 @@ get_latest_pharm_list_date <- function(pharm_list = pharmlist){
 }
 
 
-
-# create_example_map <- function(){
-#   
-# 
-#   
-#   ## creates a basic dataframe with some teams and postcodes
-#   label <- c('Team A', 'Team A', 'Team B', 'Team B', 'Team C')
-#   postcode <- c('EX16 7FL', 'EX39 5EN', 'PL13 2WP', 'PL15 8RZ', 'PL30 4PX')
-#   df <- data.frame(label,postcode)
-#   
-#   ## This is the magic bit that uses the tidygeocoder package to find longatudes and latitudes
-#   df <- df %>% mutate( geo(address = df$postcode, method = 'osm'))
-#   
-#   ## Filters cohort into three lists, one for each iconset
-#   cohort_filter1 <- df %>%
-#     filter(df$label == "Team A")
-#   cohort_filter2 <- df %>%
-#     filter(df$label == "Team B")
-#   cohort_filter3 <- df %>%
-#     filter(df$label == "Team C")
-#   
-#   ##  Create awesome icon sets for colours
-#   iconSet <- awesomeIconList(
-#     "Team A"  = makeAwesomeIcon( icon = 'male', lib = 'fa', iconColor = "black", markerColor = "red"   , spin = FALSE ) ,
-#     "Team B"             = makeAwesomeIcon( icon = 'male', lib = 'fa', iconColor = "black", markerColor = "orange", spin = FALSE ) ,
-#     "Team C"       = makeAwesomeIcon( icon = 'male', lib = 'fa', iconColor = "black", markerColor = "beige" , spin = FALSE ) )
-#   
-#   ## Creates layors for map, each for the three iconset 'Teams'
-#   map <- leaflet(df) %>%  
-#     addTiles() %>%
-#     addProviderTiles(providers$OpenStreetMap) %>% 
-#     addAwesomeMarkers( lng = cohort_filter1$long,
-#                        lat = cohort_filter1$lat,
-#                        group = "Team A",
-#                        icon = iconSet[cohort_filter1$label],
-#                        label = paste(sep = " - ",
-#                                      cohort_filter1$label ) ) %>%
-#     addAwesomeMarkers( lng = cohort_filter2$long,
-#                        lat = cohort_filter2$lat,
-#                        group = "Team B",
-#                        icon = iconSet[cohort_filter2$label],
-#                        label = paste(sep = " - ",
-#                                      cohort_filter2$label ) ) %>%
-#     addAwesomeMarkers( lng = cohort_filter3$long,
-#                        lat = cohort_filter3$lat,
-#                        group = "Team C",
-#                        icon = iconSet[cohort_filter3$label],
-#                        label = paste(sep = " - ",
-#                                      cohort_filter3$label ) ) %>% 
-#     addLayersControl(overlayGroups = c("Team A", "Team B", "Team C"),    ##this bit adds the controls
-#                      options = layersControlOptions(collapsed = FALSE) ) 
-#   
-#   map
-# }
-
-
 ################################################################################
 create_leaflet <- function(search_postcode, 
                            pharm_df = pharmlist,
@@ -185,38 +129,27 @@ create_leaflet <- function(search_postcode,
   
   df <- df %>%
     mutate(`Signed up to SCS` = if_else(`Pharmacy ODS Code` %in% smokingPharms$ODS.CODE, "Smoking", "Non-smoking")) %>%
-    #mutate(colour = if_else(`Signed up to SCS` == "Smoking", "Green", "Blue")) %>%
     filter(!is.na(x_pharm) & !is.na(y_pharm)) %>%
-    #mutate(label = `Signed up to SCS`) %>%
     mutate(label = "pharm") %>%
     ungroup() %>%
     add_row(`Pharmacy postcode` = search_postcode, label = "Input") %>%
     mutate(postcode = str_replace_all(`Pharmacy postcode`, " ", ""))
 
-  ## This is the magic bit that uses the tidygeocoder package to find longatudes and latitudes
   df <- df %>%
     rowwise() %>%
-    #mutate( geo(address = postcode, method = 'osm')) %>%
     mutate(address = postcode,
            lat = postcode_lookup(postcode)$latitude,
            long = postcode_lookup(postcode)$longitude) %>%
     ungroup()
 
-  # ## Filters cohort into three lists, one for each iconset
-  # cohort_filter1 <- df %>%
-  #   filter(label == "Smoking")
-  # cohort_filter2 <- df %>%
-  #   filter(label == "Non-smoking")
   input_postcode <- df %>%
     filter(df$label == "Input")
 
-  ##  Create awesome icon sets for colours
   iconSet <- awesomeIconList(
     "pharm" = makeAwesomeIcon( icon = 'medkit', lib = 'fa', iconColor = "black", markerColor = "green"   , spin = FALSE ) ,
     "Input" = makeAwesomeIcon( icon = 'male', lib = 'fa', iconColor = "black", markerColor = "red" , spin = FALSE )
     )
 
-  ## Creates layors for map, each for the three iconset 'Teams'
   map <- leaflet(df) %>%
     addTiles() %>%
     addProviderTiles(providers$OpenStreetMap) %>%

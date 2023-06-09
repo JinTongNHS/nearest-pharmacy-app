@@ -23,27 +23,6 @@ library(tidygeocoder)
 library(shinythemes)
 
 
-# # Define UI for application that draws a histogram
-# ui <- fluidPage(
-# 
-#     # Application title
-#     titlePanel("Smoking Cessation Nearest Pharmacy Finder"),
-# 
-#     # Sidebar with a slider input for number of bins 
-#     sidebarLayout(
-#         sidebarPanel(
-#           textInput("postcode", label = h3("Postcode Input"), value = "E.g. SE1 8UG"),
-#           hr()
-#           ),
-# 
-#         mainPanel(
-#           textInput("postcode", label = h3("Postcode Input"), value = "E.g. SE1 8UG"),
-#           tableOutput('nearestPharmsTable')
-#         )
-#     )
-# )
-
-# Define UI for application that draws a histogram
 ui <- fluidPage(
   theme = shinythemes::shinytheme("superhero"),
   
