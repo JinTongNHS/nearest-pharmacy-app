@@ -5,6 +5,7 @@ blood_pressure_check_registrations <- readRDS("blood_pressure_check_registration
 contraception_registrations <- readRDS("contraception_registrations.rds")
 cpcs_registrations <- readRDS("cpcs_registrations.rds")
 nms_registrations <- readRDS("nms_registrations.rds")
+tlhc_registrations <- readRDS("tlhc_registrations.rds")
 
 
 
@@ -20,12 +21,12 @@ get_nearest_pharmacies <- function(search_postcode,
   x_postcode <- postcode_lookup(search_postcode)$eastings
   y_postcode <- postcode_lookup(search_postcode)$northings
   
-
+  
   if(serviceType == "smoking"){
-
+    
     pharm_df <- pharm_df %>%
       filter(`Signed up to SCS` == TRUE)
-
+    
   }else if(serviceType == "cpcs"){
     
     pharm_df <- pharm_df %>%
@@ -46,8 +47,13 @@ get_nearest_pharmacies <- function(search_postcode,
     pharm_df <- pharm_df %>%
       filter(`Signed up to NMS` == TRUE)
     
+  }else if(serviceType == "tlhc"){
+    
+    pharm_df <- pharm_df %>%
+      filter(`Signed up to TLHC` == TRUE)
+    
   }
-
+  
   #creates a separate dataframe of distances to all pharmacies
   pharm_df <- pharm_df %>%
     mutate(distance_metres = sqrt((y_pharm - y_postcode)^2 + (x_pharm - x_postcode)^2)) %>%
@@ -121,11 +127,11 @@ create_leaflet <- function(search_postcode,
                            serviceType){
   
   df <- get_nearest_pharmacies(search_postcode = search_postcode, 
-                                 pharm_df = pharm_df,
-                                 num_pharms = num_pharms,
-                                 smokingPharms = smokingPharms,
-                                 serviceType = serviceType,
-                                 forMap = TRUE)
+                               pharm_df = pharm_df,
+                               num_pharms = num_pharms,
+                               smokingPharms = smokingPharms,
+                               serviceType = serviceType,
+                               forMap = TRUE)
   
   df <- df %>%
     mutate(`Signed up to SCS` = if_else(`Pharmacy ODS Code` %in% smokingPharms$ODS.CODE, "Smoking", "Non-smoking")) %>%
@@ -134,22 +140,22 @@ create_leaflet <- function(search_postcode,
     ungroup() %>%
     add_row(`Pharmacy postcode` = search_postcode, label = "Input") %>%
     mutate(postcode = str_replace_all(`Pharmacy postcode`, " ", ""))
-
+  
   df <- df %>%
     rowwise() %>%
     mutate(address = postcode,
            lat = postcode_lookup(postcode)$latitude,
            long = postcode_lookup(postcode)$longitude) %>%
     ungroup()
-
+  
   input_postcode <- df %>%
     filter(df$label == "Input")
-
+  
   iconSet <- awesomeIconList(
     "pharm" = makeAwesomeIcon( icon = 'medkit', lib = 'fa', iconColor = "black", markerColor = "green"   , spin = FALSE ) ,
     "Input" = makeAwesomeIcon( icon = 'male', lib = 'fa', iconColor = "black", markerColor = "red" , spin = FALSE )
-    )
-
+  )
+  
   map <- leaflet(df) %>%
     addTiles() %>%
     addProviderTiles(providers$OpenStreetMap) %>%
@@ -158,7 +164,7 @@ create_leaflet <- function(search_postcode,
                        group = "pharm",
                        icon = iconSet[df$label],
                        label = paste0(df$`Pharmacy ODS Code`, "\n",df$`Pharmacy Name`)
-                       ) %>%
+    ) %>%
     addAwesomeMarkers( lng = input_postcode$long,
                        lat = input_postcode$lat,
                        group = "Input",
@@ -169,6 +175,6 @@ create_leaflet <- function(search_postcode,
                 lat1 = min(df$lat),
                 lng2 = max(df$long),
                 lat2 = max(df$lat))
-
+  
   map
 }
