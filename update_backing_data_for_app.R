@@ -7,6 +7,7 @@ library(odbc)
 library(readxl)
 
 
+
 ################################################################################
 pull_pharm_list <- function(){
   
@@ -77,11 +78,16 @@ nms_registrations <- read_excel("N:/_Everyone/Primary Care Group/registrations_d
 nms_registrations <- nms_registrations %>%
   select(ODS.CODE = `ODS Code`)
 
+tlhc_registrations <- read_excel("N:/_Everyone/Primary Care Group/registrations_data_for_app/tlhc_registrations.xlsx")
+tlhc_registrations <- tlhc_registrations %>%
+  select(ODS.CODE = `ODS Code`)
+
 saveRDS(smoking_registrations, "nearest-pharmacy-app/smoking_registrations.rds")
 saveRDS(blood_pressure_check_registrations, "nearest-pharmacy-app/blood_pressure_check_registrations.rds")
 saveRDS(contraception_registrations, "nearest-pharmacy-app/contraception_registrations.rds")
 saveRDS(cpcs_registrations, "nearest-pharmacy-app/cpcs_registrations.rds")
 saveRDS(nms_registrations, "nearest-pharmacy-app/nms_registrations.rds")
+saveRDS(tlhc_registrations, "nearest-pharmacy-app/tlhc_registrations.rds")
 
 #get latest pharm list - this will take a while as it's getting the coordinates for every pharmacy on the list
 #N.B. this also saves the pharm list data in the R project so that the app can access it once it's deployed
@@ -92,6 +98,6 @@ pharmlist <- pharmlist %>%
          `Signed up to contraception services` = if_else(ODS.CODE %in% contraception_registrations$ODS.CODE, TRUE, FALSE),
          `Signed up to BP checks` = if_else(ODS.CODE %in% blood_pressure_check_registrations$ODS.CODE, TRUE, FALSE),
          `Signed up to NMS` = if_else(ODS.CODE %in% nms_registrations$ODS.CODE, TRUE, FALSE),
-         )
+         `Signed up to TLHC` = if_else(ODS.CODE %in% tlhc_registrations$ODS.CODE, TRUE, FALSE),)
 
 saveRDS(pharmlist, "nearest-pharmacy-app/pharmlist.rds")
