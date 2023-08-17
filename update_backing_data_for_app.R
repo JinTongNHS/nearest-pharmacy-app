@@ -57,26 +57,105 @@ update_pharm_list <- function(){
   
 }
 
+#phone number
+phone_number<- function(){
+  
+  con <- dbConnect(odbc::odbc(), "NCDR")
+  sql="select  distinct [ODS.CODE]=[FCode], [FcodePhone]
+  FROM [NHSE_Sandbox_DispensingReporting].[dbo].[Service_Registrations]"
+  result<-dbSendQuery(con,sql)
+  phone_number<-dbFetch(result)
+  dbClearResult(result)
+  phone_number
+  
+}
+phone_number=phone_number()
+
+
 #clean and save latest service data
-smoking_registrations <- read_excel("N:/_Everyone/Primary Care Group/registrations_data_for_app/smoking_registrations.xlsx")
+#smoking_registrations <- read_excel("N:/_Everyone/Primary Care Group/registrations_data_for_app/smoking_registrations.xlsx")
+smoking_registrations<- function(){
+  
+  con <- dbConnect(odbc::odbc(), "NCDR")
+  sql="select  distinct [Service], [FCode] 
+  FROM [NHSE_Sandbox_DispensingReporting].[dbo].[Service_Registrations]
+where [Service]='Smoking Cessation Advanced Service'"
+  result<-dbSendQuery(con,sql)
+  smoking_reg<-dbFetch(result)
+  dbClearResult(result)
+  smoking_reg
+
+}
+smoking_registrations=smoking_registrations()
 smoking_registrations <- smoking_registrations %>%
-  select(ODS.CODE = `F-Code`)
+  select(ODS.CODE = `FCode`)
 
-blood_pressure_check_registrations <- read_excel("N:/_Everyone/Primary Care Group/registrations_data_for_app/blood_pressure_check_registrations.xlsx")
+#blood_pressure_check_registrations <- read_excel("N:/_Everyone/Primary Care Group/registrations_data_for_app/blood_pressure_check_registrations.xlsx")
+blood_pressure_check_registrations <- function(){
+  con <- dbConnect(odbc::odbc(), "NCDR")
+  sql=" 
+  SELECT [Month]=[Month(claim)]
+      ,[Fcode]=[Pharmacy Code]  
+      ,[ICB Code]=[STP Code] 
+      ,[SetupFee]=[Set up fee]+[Set up fee adjustment]
+  FROM [NHSE_Sandbox_DispensingReporting].[Load].[BloodPressureService_BSA_claims]
+   "
+  result<-dbSendQuery(con,sql)
+  CVDclaims<-dbFetch(result)
+  dbClearResult(result)
+  CVDclaims
+}
+blood_pressure_check_registrations=blood_pressure_check_registrations()
 blood_pressure_check_registrations <- blood_pressure_check_registrations %>%
-  select(ODS.CODE = `F-Code`)
+  select(ODS.CODE = `Fcode`)
 
-contraception_registrations <- read_excel("N:/_Everyone/Primary Care Group/registrations_data_for_app/contraception_registrations.xlsx")
+#contraception_registrations <- read_excel("N:/_Everyone/Primary Care Group/registrations_data_for_app/contraception_registrations.xlsx")
+contraception_registrations<-function(){
+  con <- dbConnect(odbc::odbc(), "NCDR")
+  sql="select  distinct [Service], [FCode]
+  FROM [NHSE_Sandbox_DispensingReporting].[dbo].[Service_Registrations]
+where [Service]='Oral Contraception Tier 1 Service'"
+  result<-dbSendQuery(con,sql)
+  OCT1_reg<-dbFetch(result)
+  dbClearResult(result)
+  OCT1_reg
+}
+contraception_registrations=contraception_registrations()
 contraception_registrations <- contraception_registrations %>%
-  select(ODS.CODE = `F-Code`)
+  select(ODS.CODE = `FCode`)
 
-cpcs_registrations <- read_excel("N:/_Everyone/Primary Care Group/registrations_data_for_app/cpcs_registrations.xlsx")
+#cpcs_registrations <- read_excel("N:/_Everyone/Primary Care Group/registrations_data_for_app/cpcs_registrations.xlsx")
+cpcs_registrations <- function(){
+  con <- dbConnect(odbc::odbc(), "NCDR")
+  sql="select  distinct [Service], [FCode] 
+  FROM [NHSE_Sandbox_DispensingReporting].[dbo].[Service_Registrations]
+where [Service]='Community Pharmacy Consultation Service'"
+  result<-dbSendQuery(con,sql)
+  cpcs_new<-dbFetch(result)
+  dbClearResult(result)
+  
+  cpcs_new
+}
+cpcs_registrations=cpcs_registrations()
 cpcs_registrations <- cpcs_registrations %>%
   select(ODS.CODE = `FCode`)
 
-nms_registrations <- read_excel("N:/_Everyone/Primary Care Group/registrations_data_for_app/nms_registrations.xlsx")
+#nms_registrations <- read_excel("N:/_Everyone/Primary Care Group/registrations_data_for_app/nms_registrations.xlsx")
+nms_registrations <- function(){
+  con <- dbConnect(odbc::odbc(), "NCDR")
+  sql="select  distinct [Service], [FCode] 
+  FROM [NHSE_Sandbox_DispensingReporting].[dbo].[Service_Registrations]
+where [Service]='NMS expansions pilot'"
+  result<-dbSendQuery(con,sql)
+  Master1<-dbFetch(result)
+  dbClearResult(result)
+  
+  Master1
+  
+}
+nms_registrations<-nms_registrations()
 nms_registrations <- nms_registrations %>%
-  select(ODS.CODE = `ODS Code`)
+  select(ODS.CODE = `FCode`)
 
 tlhc_registrations <- read_excel("N:/_Everyone/Primary Care Group/registrations_data_for_app/tlhc_registrations.xlsx")
 tlhc_registrations <- tlhc_registrations %>%
@@ -91,13 +170,16 @@ saveRDS(tlhc_registrations, "nearest-pharmacy-app/tlhc_registrations.rds")
 
 #get latest pharm list - this will take a while as it's getting the coordinates for every pharmacy on the list
 #N.B. this also saves the pharm list data in the R project so that the app can access it once it's deployed
-#pharmlist <- update_pharm_list()
+pharmlist <- update_pharm_list()
+
+pharmlist<- pharmlist %>% left_join(phone_number,by='ODS.CODE')
+
 pharmlist <- pharmlist %>%
-  mutate(`Signed up to SCS` = if_else(ODS.CODE %in% smoking_registrations$ODS.CODE, TRUE, FALSE),
-         `Signed up to CPCS` = if_else(ODS.CODE %in% cpcs_registrations$ODS.CODE, TRUE, FALSE),
-         `Signed up to contraception services` = if_else(ODS.CODE %in% contraception_registrations$ODS.CODE, TRUE, FALSE),
-         `Signed up to BP checks` = if_else(ODS.CODE %in% blood_pressure_check_registrations$ODS.CODE, TRUE, FALSE),
-         `Signed up to NMS` = if_else(ODS.CODE %in% nms_registrations$ODS.CODE, TRUE, FALSE),
-         `Signed up to TLHC` = if_else(ODS.CODE %in% tlhc_registrations$ODS.CODE, TRUE, FALSE),)
+  mutate(`Signed up to SCS` = if_else(ODS.CODE %in% smoking_registrations$ODS.CODE, 'YES', 'NO'),
+         `Signed up to CPCS` = if_else(ODS.CODE %in% cpcs_registrations$ODS.CODE, 'YES', 'NO'),
+         `Signed up to contraception services` = if_else(ODS.CODE %in% contraception_registrations$ODS.CODE, 'YES', 'NO'),
+         `Signed up to BP checks` = if_else(ODS.CODE %in% blood_pressure_check_registrations$ODS.CODE, 'YES', 'NO'),
+         `Signed up to NMS` = if_else(ODS.CODE %in% nms_registrations$ODS.CODE, 'YES', 'NO'),
+         `Signed up to TLHC` = if_else(ODS.CODE %in% tlhc_registrations$ODS.CODE, 'YES', 'NO'),)
 
 saveRDS(pharmlist, "nearest-pharmacy-app/pharmlist.rds")

@@ -25,32 +25,32 @@ get_nearest_pharmacies <- function(search_postcode,
   if(serviceType == "smoking"){
     
     pharm_df <- pharm_df %>%
-      filter(`Signed up to SCS` == TRUE)
+      filter(`Signed up to SCS` == 'YES')
     
   }else if(serviceType == "cpcs"){
     
     pharm_df <- pharm_df %>%
-      filter(`Signed up to CPCS` == TRUE)
+      filter(`Signed up to CPCS` == 'YES')
     
   }else if(serviceType == "contraception"){
     
     pharm_df <- pharm_df %>%
-      filter(`Signed up to contraception services` == TRUE)
+      filter(`Signed up to contraception services` == 'YES')
     
   }else if(serviceType == "bp"){
     
     pharm_df <- pharm_df %>%
-      filter(`Signed up to BP checks` == TRUE)
+      filter(`Signed up to BP checks` == 'YES')
     
   }else if(serviceType == "nms"){
     
     pharm_df <- pharm_df %>%
-      filter(`Signed up to NMS` == TRUE)
+      filter(`Signed up to NMS` == 'YES')
     
   }else if(serviceType == "tlhc"){
     
     pharm_df <- pharm_df %>%
-      filter(`Signed up to TLHC` == TRUE)
+      filter(`Signed up to TLHC` == 'YES')
     
   }
   
@@ -85,7 +85,8 @@ get_nearest_pharmacies <- function(search_postcode,
              `Pharmacy Opening Hours Thursday` = Pharmacy.Opening.Hours.Thursday,
              `Pharmacy Opening Hours Friday` = Pharmacy.Opening.Hours.Friday,
              `Pharmacy Opening Hours Saturday` = Pharmacy.Opening.Hours.Saturday,
-             `Pharmacy Opening Hours Sunday` = Pharmacy.Opening.Hours.Sunday)
+             `Pharmacy Opening Hours Sunday` = Pharmacy.Opening.Hours.Sunday,
+             `Pharmacy Phone Number` = FcodePhone)
   }else{
     data <- pharm_df %>%
       select(`Distance to pharmacy (m)` = distance_metres,
@@ -105,6 +106,7 @@ get_nearest_pharmacies <- function(search_postcode,
              `Pharmacy Opening Hours Friday` = Pharmacy.Opening.Hours.Friday,
              `Pharmacy Opening Hours Saturday` = Pharmacy.Opening.Hours.Saturday,
              `Pharmacy Opening Hours Sunday` = Pharmacy.Opening.Hours.Sunday,
+             `Pharmacy Phone Number` = FcodePhone,
              x_pharm,
              y_pharm)
   }
