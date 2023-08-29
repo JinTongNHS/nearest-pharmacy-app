@@ -129,9 +129,19 @@ contraception_registrations <- contraception_registrations %>%
 #cpcs_registrations <- read_excel("N:/_Everyone/Primary Care Group/registrations_data_for_app/cpcs_registrations.xlsx")
 cpcs_registrations <- function(){
   con <- dbConnect(odbc::odbc(), "NCDR")
-  sql="select  distinct [Service], [FCode] ,[DateReported]
+  sql=" select a.FCode from
+  (SELECT FCode   
   FROM [NHSE_Sandbox_DispensingReporting].[dbo].[Service_Registrations]
-where [Service]='Community Pharmacy Consultation Service'"
+  where Service = 'Community Pharmacy Consultation Service' and 
+  DateReported = (select max([DateReported]) FROM [NHSE_Sandbox_DispensingReporting].[dbo].[Service_Registrations] 
+  where Service = 'Community Pharmacy Consultation Service') ) a
+  left join 
+  (SELECT [FCode], [deReg]=1
+  FROM [NHSE_Sandbox_DispensingReporting].[dbo].[Service_Deregistrations]
+  where [Service]= 'Community Pharmacy Consultation Service' and [DateReported]= (select max([DateReported]) FROM [NHSE_Sandbox_DispensingReporting].[dbo].[Service_Deregistrations] where [Service] = 'Community Pharmacy Consultation Service')
+  and [ReRegistrationDate] is NULL) b
+   on a.[FCode]=b.[FCode] where b.[deReg] is NULL"
+  
   result<-dbSendQuery(con,sql)
   cpcs_new<-dbFetch(result)
   dbClearResult(result)
@@ -139,9 +149,6 @@ where [Service]='Community Pharmacy Consultation Service'"
   cpcs_new
 }
 cpcs_registrations=cpcs_registrations()
-cpcs_registrations <- cpcs_registrations %>%
-  filter(DateReported==max(DateReported))%>%
-  select(ODS.CODE = `FCode`)
 
 #nms_registrations <- read_excel("N:/_Everyone/Primary Care Group/registrations_data_for_app/nms_registrations.xlsx")
 nms_registrations <- function(){
