@@ -11,21 +11,21 @@ library(readxl)
 pharmlist <- read_excel("N:/_Everyone/Primary Care Group/registrations_data_for_app/STW Active list.xlsx")
 #make sure all ODS codes and postcodes are clean
 pharmlist <- pharmlist %>%
-  mutate(postcode = str_replace_all(postcode, " ", "")) %>%
-  mutate(postcode = toupper(postcode)) %>% 
-  mutate(ODS.CODE = str_replace_all(ODS.CODE, " ", "")) %>%
+  mutate(Postcode = str_replace_all(Postcode, " ", "")) %>%
+  mutate(Postcode = toupper(Postcode)) %>% 
+  mutate(ODS.CODE = str_replace_all(`F-Code`, " ", "")) %>%
   mutate(ODS.CODE = toupper(ODS.CODE)) 
 
 #look up eastings and northings for each postcode
 pharmlist <- pharmlist %>%
   rowwise() %>%
-  mutate(x_pharm = postcode_lookup(postcode)$eastings,
-         y_pharm = postcode_lookup(postcode)$northings)
+  mutate(x_pharm = postcode_lookup(Postcode)$eastings,
+         y_pharm = postcode_lookup(Postcode)$northings)
 
 ################################################################################
 smoking_registrations <- read_excel("N:/_Everyone/Primary Care Group/registrations_data_for_app/STW Active list.xlsx")
 smoking_registrations <- smoking_registrations %>%
-  select(ODS.CODE = `ODS.CODE`)
+  select(ODS.CODE = `F-Code`)
 
 
 

@@ -30,11 +30,13 @@ library(shinythemes)
 
 ui <- fluidPage(
   
-  tags$head(tags$title("PhIF Find your pharmacy")),
+  #tags$head(tags$title("PhIF Find your pharmacy")),
+  tags$head(tags$title("LLR-STW SCS Active Pharmacy Finder")),
   
   theme = shinythemes::shinytheme("superhero"),
   
-  titlePanel("Nearest Pharmacy Finder"),
+  #titlePanel("Nearest Pharmacy Finder"),
+  titlePanel("LLR-STW SCS Active Pharmacy Finder"),
   
   fluidRow(
     column(3,

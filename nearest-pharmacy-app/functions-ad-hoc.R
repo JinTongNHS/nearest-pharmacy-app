@@ -81,8 +81,9 @@ get_nearest_pharmacies <- function(search_postcode,
              `Pharmacy Address 2` = `Address Line 2`,
              `Pharmacy Address 3` = `Address Line 3`,
              `Pharmacy Address 4` = `Address Line 4`,
-             `Pharmacy postcode` = postcode,
-             `Pharmacy Phone Number` = FcodePhone)
+             `Pharmacy postcode` = Postcode,
+             `ICB` = `ICB Code`,
+             `Pharmacy Phone Number` = `F-code Phone Number`)
   }else{
     data <- pharm_df %>%
       select(`Distance to pharmacy (m)` = distance_metres,
@@ -94,8 +95,9 @@ get_nearest_pharmacies <- function(search_postcode,
              `Pharmacy Address 2` = `Address Line 2`,
              `Pharmacy Address 3` = `Address Line 3`,
              `Pharmacy Address 4` = `Address Line 4`,
-             `Pharmacy postcode` = postcode,
-             `Pharmacy Phone Number` = FcodePhone,
+             `Pharmacy postcode` = Postcode,
+             `ICB` = `ICB Code`,
+             `Pharmacy Phone Number` = `F-code Phone Number`,
              x_pharm,
              y_pharm)
   }
