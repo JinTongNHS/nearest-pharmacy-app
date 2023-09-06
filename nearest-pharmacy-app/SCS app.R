@@ -69,8 +69,8 @@ ui <- fluidPage(
 server <- function(input, output) {
   
   
-  source("functions-ad-hoc.R")
-  #source("functions.R")
+  #source("functions-ad-hoc.R")
+  source("functions.R")
   
   
   output$nearestPharmsTable <- renderTable({ get_nearest_pharmacies(search_postcode = input$postcode, 
