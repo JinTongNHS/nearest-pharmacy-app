@@ -74,23 +74,25 @@ phone_number=phone_number()
 
 
 #clean and save latest service data
-#smoking_registrations <- read_excel("N:/_Everyone/Primary Care Group/registrations_data_for_app/smoking_registrations.xlsx")
-smoking_registrations<- function(){
-  
-  con <- dbConnect(odbc::odbc(), "NCDR")
-  sql="select  distinct [Service], [FCode] ,[DateReported]
-  FROM [NHSE_Sandbox_DispensingReporting].[dbo].[Service_Registrations]
-where [Service]='Smoking Cessation Advanced Service'"
-  result<-dbSendQuery(con,sql)
-  smoking_reg<-dbFetch(result)
-  dbClearResult(result)
-  smoking_reg
-
-}
-smoking_registrations=smoking_registrations()
+smoking_registrations <- read_excel("N:/_Everyone/Primary Care Group/registrations_data_for_app/smoking_registrations.xlsx")
 smoking_registrations <- smoking_registrations %>%
-  filter(DateReported==max(DateReported))%>%
-  select(ODS.CODE = `FCode`)
+  select(ODS.CODE = `F-Code`)
+#smoking_registrations<- function(){
+  
+#  con <- dbConnect(odbc::odbc(), "NCDR")
+#  sql="select  distinct [Service], [FCode] ,[DateReported]
+#  FROM [NHSE_Sandbox_DispensingReporting].[dbo].[Service_Registrations]
+#where [Service]='Smoking Cessation Advanced Service'"
+#  result<-dbSendQuery(con,sql)
+#  smoking_reg<-dbFetch(result)
+#  dbClearResult(result)
+#  smoking_reg
+
+#}
+#smoking_registrations=smoking_registrations()
+#smoking_registrations <- smoking_registrations %>%
+#  filter(DateReported==max(DateReported))%>%
+#  select(ODS.CODE = `FCode`)
 
 
 

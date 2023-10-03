@@ -30,12 +30,12 @@ library(shinythemes)
 
 ui <- fluidPage(
   
-  tags$head(tags$title("PhIF Find your pharmacy")),
+  tags$head(tags$title("LLR-STW SCS Active Pharmacy Finder")),
   
   theme = shinythemes::shinytheme("superhero"),
   
-  titlePanel("Nearest Pharmacy Finder"),
-  #titlePanel("LLR-STW SCS Active Pharmacy Finder"),
+  #titlePanel("Nearest Pharmacy Finder"),
+  titlePanel("LLR-STW SCS Active Pharmacy Finder"),
   
   fluidRow(
     column(3,
@@ -68,8 +68,7 @@ ui <- fluidPage(
 server <- function(input, output) {
   
   
-
-  source("functions.R")
+  source("functions-ad-hoc.R")
   
   
   output$nearestPharmsTable <- renderTable({ get_nearest_pharmacies(search_postcode = input$postcode, 
