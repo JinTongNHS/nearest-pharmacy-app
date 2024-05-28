@@ -117,19 +117,35 @@ blood_pressure_check_registrations <- blood_pressure_check_registrations %>%
 
 #contraception_registrations <- read_excel("N:/_Everyone/Primary Care Group/registrations_data_for_app/contraception_registrations.xlsx")
 contraception_registrations<-function(){
+  
   con <- dbConnect(odbc::odbc(), "NCDR")
-  sql="select  distinct [Service], [FCode],[DateReported]
-  FROM [NHSE_Sandbox_DispensingReporting].[dbo].[Service_Registrations]
-  where [Service]='Oral Contraception Tier 1 Service'"
+  sql="select  distinct [Service], [FCode], [RegistrationDate], [DateReported] FROM [NHSE_Sandbox_DispensingReporting].[dbo].[Service_Registrations]
+where [Service]='Oral Contraception Tier 1 Service'"
   result<-dbSendQuery(con,sql)
   OCT1_reg<-dbFetch(result)
   dbClearResult(result)
-  OCT1_reg
+  
+  OCT1_reg1<- OCT1_reg%>%
+    filter(`DateReported`<'2023-12-01')%>%
+    filter(`DateReported`==max(`DateReported`))%>%
+    mutate(`RegistrationDate`=as.character(`RegistrationDate`))%>%
+    mutate(`Month`= paste0(substr(`RegistrationDate`,1,8), "01"))%>%
+    mutate(`Month`= as.Date(`Month`, "%Y-%m-%d"))%>%
+    select(`Fcode`=`FCode`,`DateReported`)%>% collect()
+  
+  OCT1_reg2<- OCT1_reg%>%
+    filter(`DateReported`>='2023-12-01')%>%
+    mutate(`RegistrationDate`=as.character(`RegistrationDate`))%>%
+    mutate(`Month`= paste0(substr(`RegistrationDate`,1,8), "01"))%>%
+    mutate(`Month`= as.Date(`Month`, "%Y-%m-%d"))%>%
+    select(`Fcode`=`FCode`,`DateReported`)%>% collect()
+  
+  OCT1_reg=rbind(OCT1_reg2,OCT1_reg1)  
 }
 contraception_registrations=contraception_registrations()
 contraception_registrations <- contraception_registrations %>%
   filter(DateReported==max(DateReported))%>%
-  select(ODS.CODE = `FCode`)
+  select(ODS.CODE = `Fcode`)
 
 #cpcs_registrations <- read_excel("N:/_Everyone/Primary Care Group/registrations_data_for_app/cpcs_registrations.xlsx")
 cpcs_registrations <- function(){
