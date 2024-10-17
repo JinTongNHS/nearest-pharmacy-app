@@ -23,9 +23,6 @@ pull_pharm_list <- function(){
   #fix miscoded snapshot month
   pharm_list <- pharm_list %>%
     mutate(SnapshotMonth = as.Date(SnapshotMonth)) %>%
-    mutate(SnapshotMonth = if_else(SnapshotMonth == as.Date("2022-10-01"), 
-                                   as.Date("2022-09-01"), 
-                                   SnapshotMonth)) %>%
     rename(ODS.CODE = Pharmacy.ODS.Code..F.Code., 
            postcode = Post.Code, 
            ICB.Name = STP.Name, 
