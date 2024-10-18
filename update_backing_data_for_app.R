@@ -58,8 +58,10 @@ update_pharm_list <- function(){
 phone_number<- function(){
   
   con <- dbConnect(odbc::odbc(), "NCDR")
-  sql="select  distinct [ODS.CODE]=[FCode], [FcodePhone]
-  FROM [NHSE_Sandbox_DispensingReporting].[dbo].[Service_Registrations]"
+  sql="select  [ODS.CODE]=[FCode], MAX([FcodePhone]) AS [FcodePhone]
+  FROM [NHSE_Sandbox_DispensingReporting].[dbo].[Service_Registrations]
+  GROUP BY 
+    [FCode]"
   result<-dbSendQuery(con,sql)
   phone_number<-dbFetch(result)
   dbClearResult(result)
