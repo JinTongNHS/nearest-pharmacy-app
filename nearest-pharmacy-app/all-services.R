@@ -46,10 +46,9 @@ ui <- fluidPage(
            radioButtons("serviceType", label = h5("Search across"),
                         choices = list("Pharmacies delivering essential services (including NHS Discharge Medicines Service)" = "All", 
                                        "All pharmacies delivering the NHS pharmacy smoking cessation service (SCS)" = "smoking",
-                                       "Only pharmacies delivering Community Pharmacist Consultation Service (CPCS)" = "cpcs",
+                                       "Only pharmacies delivering Pharmacy First Service (PFS)" = "pf",
                                        "Only pharmacies delivering the NHS pharmacy Tier 1 contraception service" = "contraception",
                                        "Only pharmacies delivering the NHS pharmacy blood pressure check service" = "bp",
-                                       "Only pharmacies registered to deliver the targeted long health check service pilot" = "tlhc",
                                        "Only pharmacies registered to the New Medicine Service (NMS) expansion pilot" = "nms"), 
                         selected = "All")
     ),

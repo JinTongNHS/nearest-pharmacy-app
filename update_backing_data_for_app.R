@@ -146,29 +146,23 @@ contraception_registrations <- contraception_registrations %>%
   filter(DateReported==max(DateReported))%>%
   select(ODS.CODE = `Fcode`)
 
-#cpcs_registrations <- read_excel("N:/_Everyone/Primary Care Group/registrations_data_for_app/cpcs_registrations.xlsx")
-cpcs_registrations <- function(){
+#clean and save latest service data
+pf <- function(){
   con <- dbConnect(odbc::odbc(), "NCDR")
-  sql=" select a.FCode from
-  (SELECT FCode   
-  FROM [NHSE_Sandbox_DispensingReporting].[dbo].[Service_Registrations]
-  where Service = 'Community Pharmacy Consultation Service' and 
-  DateReported = (select max([DateReported]) FROM [NHSE_Sandbox_DispensingReporting].[dbo].[Service_Registrations] 
-  where Service = 'Community Pharmacy Consultation Service') ) a
-  left join 
-  (SELECT [FCode], [deReg]=1
-  FROM [NHSE_Sandbox_DispensingReporting].[dbo].[Service_Deregistrations]
-  where [Service]= 'Community Pharmacy Consultation Service' and [DateReported]= (select max([DateReported]) FROM [NHSE_Sandbox_DispensingReporting].[dbo].[Service_Deregistrations] where [Service] = 'Community Pharmacy Consultation Service')
-  and [ReRegistrationDate] is NULL) b
-   on a.[FCode]=b.[FCode] where b.[deReg] is NULL"
-  
+  sql="SELECT [FCode]=[Pharmacy ODS Code (F-Code)]
+      ,[PF_Flg]
+  FROM [NHSE_Sandbox_DispensingReporting].[dbo].[Ref_PharmList_for_PharmFirstReporting]
+where [PF_Flg]='IN'"
   result<-dbSendQuery(con,sql)
-  cpcs_new<-dbFetch(result)
+  Master1<-dbFetch(result)
   dbClearResult(result)
   
-  cpcs_new
+  Master1
+  
 }
-cpcs_registrations=cpcs_registrations()
+pf_registrations<-pf()
+pf_registrations <- pf_registrations %>%
+  select(ODS.CODE = `FCode`)
 
 #nms_registrations <- read_excel("N:/_Everyone/Primary Care Group/registrations_data_for_app/nms_registrations.xlsx")
 nms_registrations <- function(){
@@ -188,16 +182,13 @@ nms_registrations <- nms_registrations %>%
   filter(DateReported==max(DateReported))%>%
   select(ODS.CODE = `FCode`)
 
-tlhc_registrations <- read_excel("N:/_Everyone/Primary Care Group/registrations_data_for_app/tlhc_registrations.xlsx")
-tlhc_registrations <- tlhc_registrations %>%
-  select(ODS.CODE = `ODS Code`)
 
 saveRDS(smoking_registrations, "nearest-pharmacy-app/smoking_registrations.rds")
 saveRDS(blood_pressure_check_registrations, "nearest-pharmacy-app/blood_pressure_check_registrations.rds")
 saveRDS(contraception_registrations, "nearest-pharmacy-app/contraception_registrations.rds")
-saveRDS(cpcs_registrations, "nearest-pharmacy-app/cpcs_registrations.rds")
+saveRDS(pf_registrations, "nearest-pharmacy-app/pf_registrations.rds")
 saveRDS(nms_registrations, "nearest-pharmacy-app/nms_registrations.rds")
-saveRDS(tlhc_registrations, "nearest-pharmacy-app/tlhc_registrations.rds")
+
 
 #get latest pharm list - this will take a while as it's getting the coordinates for every pharmacy on the list
 #N.B. this also saves the pharm list data in the R project so that the app can access it once it's deployed
@@ -208,10 +199,9 @@ pharmlist<- pharmlist %>% left_join(phone_number,by='ODS.CODE')
 
 pharmlist <- pharmlist %>%
   mutate(`Signed up to SCS` = if_else(ODS.CODE %in% smoking_registrations$ODS.CODE, 'YES', 'NO'),
-         `Signed up to CPCS` = if_else(ODS.CODE %in% cpcs_registrations$ODS.CODE, 'YES', 'NO'),
+         `Signed up to PF` = if_else(ODS.CODE %in% pf_registrations$ODS.CODE, 'YES', 'NO'),
          `Signed up to contraception services` = if_else(ODS.CODE %in% contraception_registrations$ODS.CODE, 'YES', 'NO'),
          `Signed up to BP checks` = if_else(ODS.CODE %in% blood_pressure_check_registrations$ODS.CODE, 'YES', 'NO'),
-         `Signed up to NMS` = if_else(ODS.CODE %in% nms_registrations$ODS.CODE, 'YES', 'NO'),
-         `Signed up to TLHC` = if_else(ODS.CODE %in% tlhc_registrations$ODS.CODE, 'YES', 'NO'),)
+         `Signed up to NMS` = if_else(ODS.CODE %in% nms_registrations$ODS.CODE, 'YES', 'NO'))
 
 saveRDS(pharmlist, "nearest-pharmacy-app/pharmlist.rds")

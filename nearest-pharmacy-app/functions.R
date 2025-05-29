@@ -3,9 +3,8 @@ pharmlist <- readRDS("pharmlist.rds")
 smoking_registrations <- readRDS("smoking_registrations.rds")
 blood_pressure_check_registrations <- readRDS("blood_pressure_check_registrations.rds")
 contraception_registrations <- readRDS("contraception_registrations.rds")
-cpcs_registrations <- readRDS("cpcs_registrations.rds")
+pf_registrations <- readRDS("pf_registrations.rds")
 nms_registrations <- readRDS("nms_registrations.rds")
-tlhc_registrations <- readRDS("tlhc_registrations.rds")
 
 
 
@@ -27,10 +26,10 @@ get_nearest_pharmacies <- function(search_postcode,
     pharm_df <- pharm_df %>%
       filter(`Signed up to SCS` == 'YES')
     
-  }else if(serviceType == "cpcs"){
+  }else if(serviceType == "pf"){
     
     pharm_df <- pharm_df %>%
-      filter(`Signed up to CPCS` == 'YES')
+      filter(`Signed up to PF` == 'YES')
     
   }else if(serviceType == "contraception"){
     
@@ -46,11 +45,6 @@ get_nearest_pharmacies <- function(search_postcode,
     
     pharm_df <- pharm_df %>%
       filter(`Signed up to NMS` == 'YES')
-    
-  }else if(serviceType == "tlhc"){
-    
-    pharm_df <- pharm_df %>%
-      filter(`Signed up to TLHC` == 'YES')
     
   }
   
@@ -69,7 +63,7 @@ get_nearest_pharmacies <- function(search_postcode,
              `Distance to pharmacy (miles)` = distance_miles,
              `Pharmacy ODS Code` = ODS.CODE,
              `Signed up to SCS`,
-             `Signed up to CPCS`,
+             `Signed up to PF`,
              `Signed up to contraception services`,
              `Signed up to BP checks`,
              `Signed up to NMS`,
