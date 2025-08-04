@@ -6,14 +6,14 @@ library(DBI)
 library(odbc)
 library(readxl)
 
+con <- dbConnect(odbc::odbc(), dsn="prodtest", timeout = 10)
 
 
 ################################################################################
 pull_pharm_list <- function(){
   
-  con <- dbConnect(odbc::odbc(), "NCDR")
   sql = "SELECT *
-  FROM [NHSE_Sandbox_DispensingReporting].[dbo].[Ref_PharmaceuticalList]"
+  FROM [CommunityPharmacy_Public].[Ref_PharmaceuticalList]"
   result <- dbSendQuery(con,sql)
   pharm_list <- dbFetch(result)
   dbClearResult(result)
@@ -56,10 +56,9 @@ update_pharm_list <- function(){
 
 #phone number
 phone_number<- function(){
-  
-  con <- dbConnect(odbc::odbc(), "NCDR")
+
   sql="select  [ODS.CODE]=[FCode], MAX([FcodePhone]) AS [FcodePhone]
-  FROM [NHSE_Sandbox_DispensingReporting].[dbo].[Service_Registrations]
+  FROM [CommunityPharmacy_Restricted].[Service_Registrations]
   GROUP BY 
     [FCode]"
   result<-dbSendQuery(con,sql)
@@ -73,7 +72,7 @@ phone_number=phone_number()
 
 
 #clean and save latest service data
-smoking_registrations <- read_excel("N:/_Everyone/Primary Care Group/registrations_data_for_app/smoking_registrations.xlsx")
+smoking_registrations <- read_excel("smoking_registrations.xlsx")
 smoking_registrations <- smoking_registrations %>%
   select(ODS.CODE = `F-Code`)
 #smoking_registrations<- function(){
@@ -97,13 +96,13 @@ smoking_registrations <- smoking_registrations %>%
 
 #blood_pressure_check_registrations <- read_excel("N:/_Everyone/Primary Care Group/registrations_data_for_app/blood_pressure_check_registrations.xlsx")
 blood_pressure_check_registrations <- function(){
-  con <- dbConnect(odbc::odbc(), "NCDR")
+  
   sql=" 
   SELECT [Month]=[Month(claim)]
       ,[Fcode]=[Pharmacy Code]  
       ,[ICB Code]=[STP Code] 
       ,[SetupFee]=[Set up fee]+[Set up fee adjustment]
-  FROM [NHSE_Sandbox_DispensingReporting].[Load].[BloodPressureService_BSA_claims]
+  FROM [CommunityPharmacy_Public].[BloodPressureService_BSA_claims]
    "
   result<-dbSendQuery(con,sql)
   CVDclaims<-dbFetch(result)
@@ -116,9 +115,9 @@ blood_pressure_check_registrations <- blood_pressure_check_registrations %>%
 
 #contraception_registrations <- read_excel("N:/_Everyone/Primary Care Group/registrations_data_for_app/contraception_registrations.xlsx")
 contraception_registrations<-function(){
-  
-  con <- dbConnect(odbc::odbc(), "NCDR")
-  sql="select  distinct [Service], [FCode], [RegistrationDate], [DateReported] FROM [NHSE_Sandbox_DispensingReporting].[dbo].[Service_Registrations]
+
+  sql="select  distinct [Service], [FCode], [RegistrationDate], [DateReported] 
+  FROM [CommunityPharmacy_Restricted].[Service_Registrations]
 where [Service]='Oral Contraception Tier 1 Service'"
   result<-dbSendQuery(con,sql)
   OCT1_reg<-dbFetch(result)
@@ -148,10 +147,10 @@ contraception_registrations <- contraception_registrations %>%
 
 #clean and save latest service data
 pf <- function(){
-  con <- dbConnect(odbc::odbc(), "NCDR")
+  
   sql="SELECT [FCode]=[Pharmacy ODS Code (F-Code)]
       ,[PF_Flg]
-  FROM [NHSE_Sandbox_DispensingReporting].[dbo].[Ref_PharmList_for_PharmFirstReporting]
+  FROM [CommunityPharmacy_Restricted].[Ref_PharmList_for_PharmFirstReporting]
 where [PF_Flg]='IN'"
   result<-dbSendQuery(con,sql)
   Master1<-dbFetch(result)
@@ -166,9 +165,9 @@ pf_registrations <- pf_registrations %>%
 
 #nms_registrations <- read_excel("N:/_Everyone/Primary Care Group/registrations_data_for_app/nms_registrations.xlsx")
 nms_registrations <- function(){
-  con <- dbConnect(odbc::odbc(), "NCDR")
+  
   sql="select  distinct [Service], [FCode],[DateReported] 
-  FROM [NHSE_Sandbox_DispensingReporting].[dbo].[Service_Registrations]
+  FROM [CommunityPharmacy_Restricted].[Service_Registrations]
 where [Service]='NMS expansions pilot'"
   result<-dbSendQuery(con,sql)
   Master1<-dbFetch(result)
